@@ -260,48 +260,48 @@ def patch_model_and_tokenizer(model, tokenizer, downcast_rope = True):
         pass
     pass
     
-    # Also patch all dtypes - BnB seems to not allocate the correct type?
-    # BnB default dtype seems to be float16!
-    try:
-        from bitsandbytes.nn  import Linear4bit as Bnb_Linear4bit
-    except:
-        raise ImportError("Unsloth: Please install bitsandbytes via `pip install bitsandbytes`")
-    try:
-        from peft.tuners.lora import Linear4bit as Peft_Linear4bit
-    except:
-        raise ImportError("Unsloth: Please install peft via `pip install peft`")
-    pass
+    # # Also patch all dtypes - BnB seems to not allocate the correct type?
+    # # BnB default dtype seems to be float16!
+    # try:
+    #     from bitsandbytes.nn  import Linear4bit as Bnb_Linear4bit
+    # except:
+    #     raise ImportError("Unsloth: Please install bitsandbytes via `pip install bitsandbytes`")
+    # try:
+    #     from peft.tuners.lora import Linear4bit as Peft_Linear4bit
+    # except:
+    #     raise ImportError("Unsloth: Please install peft via `pip install peft`")
+    # pass
 
-    for name, module in model.named_modules():
-        if isinstance(module, (Bnb_Linear4bit, Peft_Linear4bit)):
-            weight = module.weight
-            quant_state = weight.quant_state
+    # for name, module in model.named_modules():
+    #     if isinstance(module, (Bnb_Linear4bit, Peft_Linear4bit)):
+    #         weight = module.weight
+    #         quant_state = weight.quant_state
 
-            if type(quant_state) is list:
-                # BnB seems to have float16 as default!
-                module.weight.quant_state[2] = correct_dtype # Cast to correct dtype
-            else:
-                # https://github.com/TimDettmers/bitsandbytes/pull/763/files
-                quant_state.dtype = correct_dtype
-            pass
-        pass
-        # Downcast RoPE embedding to correct data type
-        if downcast_rope and ((name.endswith("rotary_emb") or hasattr(module, "cos_cached"))):
+    #         if type(quant_state) is list:
+    #             # BnB seems to have float16 as default!
+    #             module.weight.quant_state[2] = correct_dtype # Cast to correct dtype
+    #         else:
+    #             # https://github.com/TimDettmers/bitsandbytes/pull/763/files
+    #             quant_state.dtype = correct_dtype
+    #         pass
+    #     pass
+    #     # Downcast RoPE embedding to correct data type
+    #     if downcast_rope and ((name.endswith("rotary_emb") or hasattr(module, "cos_cached"))):
 
-            if hasattr(module, "cos_cached") and \
-                (module.cos_cached.dtype != correct_dtype):
+    #         if hasattr(module, "cos_cached") and \
+    #             (module.cos_cached.dtype != correct_dtype):
 
-                module.cos_cached = module.cos_cached.to(correct_dtype)
-                module.sin_cached = module.sin_cached.to(correct_dtype)
+    #             module.cos_cached = module.cos_cached.to(correct_dtype)
+    #             module.sin_cached = module.sin_cached.to(correct_dtype)
 
-            elif hasattr(module, "short_cos_cached") and \
-                (module.short_cos_cached.dtype != correct_dtype):
+    #         elif hasattr(module, "short_cos_cached") and \
+    #             (module.short_cos_cached.dtype != correct_dtype):
                 
-                module.short_cos_cached = module.short_cos_cached.to(correct_dtype)
-                module.short_sin_cached = module.short_sin_cached.to(correct_dtype)
-            pass
-        pass
-    pass
+    #             module.short_cos_cached = module.short_cos_cached.to(correct_dtype)
+    #             module.short_sin_cached = module.short_sin_cached.to(correct_dtype)
+    #         pass
+    #     pass
+    # pass
 
     # Clear deleted GPU items
     for _ in range(3):
