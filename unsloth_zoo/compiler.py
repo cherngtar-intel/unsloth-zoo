@@ -37,8 +37,11 @@ import triton
 
 # Disable some compilations if old versions are seen
 OLD_TORCH_VERSION = Version(torch.__version__) < Version("2.5.0")
-#major, minor = torch.cuda.get_device_capability()
-major, minor = 7,5
+CUDA = False
+if CUDA:
+    major, minor = torch.cuda.get_device_capability()
+else:
+    major, minor = 7, 5
 OLD_CUDA_ARCH_VERSION = (major <= 7) and (minor < 5)
 OLD_TRITON_VERSION = Version(triton.__version__) < Version("3.0.0")
 
