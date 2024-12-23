@@ -14,17 +14,17 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+from unsloth_config import *
+
 import torch
 from packaging.version import Version
 import os
 torch_nn_functional_cross_entropy = torch.nn.functional.cross_entropy
 from triton import __version__ as triton_version
-CUDA = False
-if CUDA:
-    major, minor = torch.cuda.get_device_capability()
+if HAS_XPU:
+    major, minor = 0, 0
 else:
-    major, minor = 7, 5
-    
+    major, minor = torch.cuda.get_device_capability()
 
 global HAS_CUT_CROSS_ENTROPY
 if (Version(torch.__version__) >= Version("2.4.0")) and \

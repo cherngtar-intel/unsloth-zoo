@@ -14,6 +14,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+from unsloth_config import *
+
 import torch
 import os
 
@@ -26,7 +28,6 @@ __all__ = [
 ]
 
 from .compiler import UNSLOTH_COMPILE_LOCATION
-BNBPEFT = False
 
 # Also disable compiling on bitsandbytes
 def patch_compiling_bitsandbytes():
@@ -260,7 +261,7 @@ def patch_model_and_tokenizer(model, tokenizer, downcast_rope = True):
         pass
     pass
     
-    if BNBPEFT:
+    if HAS_BNB:
         # Also patch all dtypes - BnB seems to not allocate the correct type?
         # BnB default dtype seems to be float16!
         try:

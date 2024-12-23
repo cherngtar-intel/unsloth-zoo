@@ -20,6 +20,8 @@ __all__ = [
     "unsloth_compile_transformers",
 ]
 
+from unsloth_config import *
+
 import inspect
 import re
 import importlib
@@ -37,11 +39,10 @@ import triton
 
 # Disable some compilations if old versions are seen
 OLD_TORCH_VERSION = Version(torch.__version__) < Version("2.5.0")
-CUDA = False
-if CUDA:
-    major, minor = torch.cuda.get_device_capability()
+if HAS_XPU:
+    major, minor = 0, 0
 else:
-    major, minor = 7, 5
+    major, minor = torch.cuda.get_device_capability()
 OLD_CUDA_ARCH_VERSION = (major <= 7) and (minor < 5)
 OLD_TRITON_VERSION = Version(triton.__version__) < Version("3.0.0")
 
@@ -539,16 +540,17 @@ pass
 def check_nvidia():
     # Unsloth doesn't work yet on AMD devices - we're working on it!
     output = np.array([0,])
-    try:
-        output = subprocess.check_output("nvidia-smi --query-gpu=memory.used --format=csv", shell = True)
-        output = re.findall(rb'([\d]{1,})[\s]{1,}M', output)
-        output = np.array([int(x.decode('utf-8'))/1024 for x in output])
-    except:
-        if not torch.cuda.is_available():
-            raise RuntimeError("Unsloth: We do not support AMD / Intel machines yet - it is a work in progress!")    
+    if HAS_XPU == False:
+        try:
+            output = subprocess.check_output("nvidia-smi --query-gpu=memory.used --format=csv", shell = True)
+            output = re.findall(rb'([\d]{1,})[\s]{1,}M', output)
+            output = np.array([int(x.decode('utf-8'))/1024 for x in output])
+        except:
+            if not torch.cuda.is_available():
+                raise RuntimeError("Unsloth: We do not support AMD / Intel machines yet - it is a work in progress!")
     return output
 pass
-#PRE_CHECK = check_nvidia()
+PRE_CHECK = check_nvidia()
 
 
 # Patch remaining functions
